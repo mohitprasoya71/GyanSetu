@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GenAI Tools</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .btn {
+      @apply bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-xl transition duration-300 shadow-md;
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-r from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center px-4 py-12">
+  <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-indigo-100">
+    <h1 class="text-3xl font-bold text-center mb-6 text-indigo-700 tracking-wide">🎓 GyanSetu~ Learning Assistant</h1>
+
+    <textarea 
+      id="userInput" 
+      rows="4" 
+      placeholder="Enter your text or question..." 
+      class="w-full p-4 border-2 border-indigo-200 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-indigo-50 resize-none shadow-sm"
+    ></textarea>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+      <button onclick="callAPI('/ask')" class="btn">Ask Question</button>
+      <button onclick="callAPI('/summarize-topic')" class="btn">Summarize Topic</button>
+      <button onclick="callAPI('/summarize-chapter')" class="btn">Summarize Chapter</button>
+      <button onclick="callAPI('/mcq')" class="btn">Generate MCQs</button>
+      <button onclick="callAPI('/explain')" class="btn">Explain Hinglish</button>
+      <button onclick="callAPI('/flashcards')" class="btn">Flashcards</button>
+    </div>
+
+    <div id="output" class="mt-6 whitespace-pre-wrap bg-indigo-50 p-5 rounded-xl text-sm text-gray-800 font-mono border border-indigo-200 shadow-inner min-h-[100px] transition-all"></div>
+  </div>
+
+  <script>
+    gsap.from("textarea", { opacity: 0, y: -20, duration: 0.8 });
+    gsap.from(".btn", { opacity: 0, y: 20, duration: 0.6, stagger: 0.1 });
+
+    async function callAPI(route) {
+      const input = document.getElementById("userInput").value.trim();
+      const output = document.getElementById("output");
+
+      if (!input) {
+        alert("Please enter some text.");
+        return;
+      }
+
+      output.textContent = "⏳ Thinking... Please wait";
+
+      let bodyData = {};
+      if (route === "/ask") bodyData = { question: input };
+      else if (route === "/summarize-topic") bodyData = { topic: input };
+      else if (route === "/summarize-chapter") bodyData = { text: input };
+      else if (route === "/mcq") bodyData = { text: input };
+      else if (route === "/explain") bodyData = { text: input };
+      else if (route === "/flashcards") bodyData = { text: input };
+
+      try {
+        const res = await fetch(`http://localhost:3000/api${route}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bodyData),
+        });
+
+        const data = await res.json();
+
+        if (data.ans) output.textContent = data.ans;
+        else if (data.summary) output.textContent = data.summary;
+        else if (data.mcqs) output.textContent = data.mcqs;
+        else if (data.answer) output.textContent = data.answer;
+        else if (data.flashcards) output.textContent = data.flashcards;
+        else output.textContent = "🤔 No response received.";
+
+      } catch (error) {
+        output.textContent = "❌ Error: " + error.message;
+      }
+    }
+  </script>
+</body>
+</html>
